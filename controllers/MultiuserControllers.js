@@ -30,7 +30,7 @@ export const MultiuserRegisterVisitor = async (req,res)=>{
         userName: username,
         password: hashedpw,
         Email:email,
-        currentRole:[...user.currentRole,role]
+        currentRole:user?[...user.currentRole,role] : [role]
     })
 
     res.json({
@@ -40,38 +40,41 @@ export const MultiuserRegisterVisitor = async (req,res)=>{
 
 }
 
-export const MultiuserLogin = async (req,res)=>{
+export const MultiuserLogin = async (req, res, next) => {
+    const { email, password, role } = req.body;
 
-    const {email,password,role} = req.body
     try {
-        const user = await MultiUser.findOne({where:{Email:email, currentRole:{ [Op.contains]:[role]}}})
-        
+        const user = await MultiUser.findOne({
+            where: {
+                Email: email,
+                currentRole: { [Op.contains]: [role] }
+            }
+        });
+
         if (!user) {
-            const error = new Error('Not Registered');
-            error.status =422;
-            throw error;
+            return res.status(422).json({ error: 'Not Registered' });
         }
-        const isEqual = await bcrypt.compare(password,user.password)
+
+        const isEqual = await bcrypt.compare(password, user.password);
         if (!isEqual) {
-            const error = new Error ('Wrong Password')
-            error.status = 422;
-            throw error
+            return res.status(422).json({ error: 'Wrong Password' });
         }
+
         const token = jwt.sign(
             {
-                email:user.Email,
-                userId:user.multiUserId.toString()
+                email: user.Email,
+                userId: user.multiUserId.toString()
             },
-            'somesupersecret',
+            process.env.JWT_SECRET, // Use environment variable
             {
-                expiresIn:'1h'
+                expiresIn: '1h'
             }
-        )
-        res.json({token: token, userId:user.multiUserId.toString()})
+        );
+
+        res.json({ token, userId: user.multiUserId.toString() });
+
     } catch (error) {
-        if (!error.status) {
-            error.status = 500
-        }
-        next(error)
+        console.error(error);
+        res.status(error.status || 500).json({ error: error.message });
     }
-}
+};
