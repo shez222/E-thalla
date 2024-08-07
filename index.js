@@ -1,9 +1,14 @@
 const express = require('express');
 const sequelize = require('./utils/db')
+const MultiUseruserRoutes = require('./routes/multiUserROutes')
 
 const app = express();
 
+app.use(express.json());
 
+
+
+app.use('/E-Thalla',MultiUseruserRoutes)
 
 
 // sequelize

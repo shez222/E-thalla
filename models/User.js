@@ -21,14 +21,18 @@ const MultiUser = sequelizeDbConnect.define('MultiUser',{
         type: Sequelize.STRING,
         allowNull:false
     },
-    vendor: {
-        type: Sequelize.BOOLEAN,
-        allowNull:false
+    currentRole: {
+        type: Sequelize.ARRAY(Sequelize.STRING),
+        defaultValue: [], // Corrected default value for array type
     },
-    serviceProvider:{
-        type:Sequelize.BOOLEAN,
-        allowNull:false
-    },
+    // vendor: {
+    //     type: Sequelize.BOOLEAN,
+    //     allowNull:false
+    // },
+    // serviceProvider:{
+    //     type:Sequelize.BOOLEAN,
+    //     // allowNull:false
+    // },
     servicProviderDetals: {
         type:Sequelize.INTEGER,
         references:{
@@ -36,10 +40,10 @@ const MultiUser = sequelizeDbConnect.define('MultiUser',{
             key: 'serviceProviderDetailsId'
         }
     },
-    visitor: {
-        type:Sequelize.STRING,
-        allowNull:false
-    },
+    // visitor: {
+    //     type:Sequelize.STRING,
+    //     // allowNull:false
+    // },
     vendorDetals: {
         type:Sequelize.INTEGER,
         references:{
