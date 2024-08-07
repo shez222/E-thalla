@@ -74,5 +74,4 @@ export const MultiuserLogin = async (req,res)=>{
         }
         next(error)
     }
-
 }
