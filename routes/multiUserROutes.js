@@ -2,8 +2,12 @@ const express = require('express')
 const MultiUserController = require('../controllers/MultiuserControllers')
 
 
-const route = express.Router()
+const router = express.Router()
 
 
-route.post('/user/register',MultiUserController.MultiuserRegister);
-route.post('/user/login',MultiUserController.MultiuserLogin)
+router.post('/user/register',MultiUserController.MultiuserRegister);
+router.post('/user/login',MultiUserController.MultiuserLogin)
+router.post('/user/match-otp',MultiUserController.matchOtp)
+
+
+module.exports = router;

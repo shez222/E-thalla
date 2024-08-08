@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelizeDbConnect =require('../utils/db');
 
-const MultiUser = sequelizeDbConnect.define('MultiUser',{
+const MultiUser = sequelizeDbConnect.define('multiuser',{
     multiUserId : {
         type:Sequelize.INTEGER,
         allowNull:true,
@@ -22,54 +22,55 @@ const MultiUser = sequelizeDbConnect.define('MultiUser',{
         allowNull:false
     },
     currentRole: {
-        type: Sequelize.ARRAY(Sequelize.STRING),
-        defaultValue: [], // Corrected default value for array type
+        type: Sequelize.JSON, // Use JSON to store array-like data
+        defaultValue: [], // Default value as an empty array
+        allowNull: false
     },
-    // vendor: {
-    //     type: Sequelize.BOOLEAN,
-    //     allowNull:false
+    // servicProviderDetals: {
+    //     type:Sequelize.INTEGER,
+    //     references:{
+    //         model:'ServicePovider',
+    //         key: 'serviceProviderDetailsId'
+    //     }
     // },
-    // serviceProvider:{
-    //     type:Sequelize.BOOLEAN,
-    //     // allowNull:false
+    // vendorDetals: {
+    //     type:Sequelize.INTEGER,
+    //     references:{
+    //         model:'Vendor',
+    //         key: 'vendorDetailsId'
+    //     }
     // },
-    servicProviderDetals: {
-        type:Sequelize.INTEGER,
-        references:{
-            model:'ServicePovider',
-            key: 'serviceProviderDetailsId'
-        }
-    },
-    // visitor: {
-    //     type:Sequelize.STRING,
-    //     // allowNull:false
-    // },
-    vendorDetals: {
-        type:Sequelize.INTEGER,
-        references:{
-            model:'Vendor',
-            key: 'vendorDetailsId'
-        }
-    },
     cnic : {
-        type:Sequelize.NUMBER,
-        // allowNull:false
+        type:Sequelize.STRING,
+        allowNull:true
     },
     profilePicture: {
-        type:Sequelize.STRING
+        type:Sequelize.STRING,
+        allowNull:true
     },
     mobileNumber:{
-        type:Sequelize.NUMBER,
-        // allowNull:false
+        type:Sequelize.STRING,
+        allowNull:true
     },
-    location:{
-        type:Sequelize.INTEGER,
-        references:{
-            model: 'Location',
-            key: 'locationId'
-        }
+    otp :{
+        type:Sequelize.STRING,
+        allowNull:true
+    },
+    otpExpiry:{
+        type:Sequelize.STRING,
+        allowNull:true
+    },
+    token: {
+        type:Sequelize.STRING,
+        allowNull:true
     }
-    
-
-
+    // location:{
+    //     type:Sequelize.INTEGER,
+    //     references:{
+    //         model: 'Location',
+    //         key: 'locationId'
+    //     }
+    // }
 })
+
+module.exports = MultiUser;
