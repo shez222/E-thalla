@@ -6,6 +6,7 @@ const  { sendEmail } = require('../utils/sendmail')
 
 
 const MultiUser = require('../models/User');
+const { error } = require('console');
 
 
 const MultiuserRegister = async (req, res) => {
@@ -13,20 +14,16 @@ const MultiuserRegister = async (req, res) => {
     
     try {
         // Check if passwords match
-        console.log(typeof(password),typeof(confirmpassword));
-        
-        if (password !== confirmpassword) {
-            const error = new Error('Password Not Matched');
-            error.status = 422;
-            throw error;
-        }
-
+        // console.log(typeof(password),typeof(confirmpassword));
         // Find the user by email
         const user = await MultiUser.findOne({ where: { Email: email } });
-
         // Check if user exists and the role is already assigned
         if (user) {
             // Convert currentRole JSON to array of role names
+            const isEqual = await bcrypt.compare(password,user.password);
+            if (!isEqual) {
+                return res.json({ error: "Email already exist"})
+            }
             const currentRoles = user.currentRole.map(roleObj => Object.keys(roleObj)[0]);
             console.log(currentRoles);
             
@@ -49,6 +46,12 @@ const MultiuserRegister = async (req, res) => {
         }
         console.log('check2');
         
+                
+        if (password !== confirmpassword) {
+            const error = new Error('Password Not Matched');
+            error.status = 422;
+            throw error;
+        }
 
         // Hash the password
         const hashedpw = await bcrypt.hash(password, 12);
