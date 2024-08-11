@@ -8,7 +8,10 @@ const app = express();
 app.use(express.json());
 
 
-
+app.use('/',(req,res)=>{
+    console.log('hello shehroz');
+    
+})
 app.use('/E-Thalla',MultiUseruserRoutes)
 
 
