@@ -13,21 +13,13 @@ const MultiuserRegister = async (req, res) => {
     const { email, username, password, confirmpassword, role } = req.body;
     
     try {
-        // Check if passwords match
-        // console.log(typeof(password),typeof(confirmpassword));
-        // Find the user by email
         const user = await MultiUser.findOne({ where: { Email: email } });
-        // Check if user exists and the role is already assigned
         if (user) {
-            // Convert currentRole JSON to array of role names
             const isEqual = await bcrypt.compare(password,user.password);
             if (!isEqual) {
                 return res.json({ error: "Email already exist"})
             }
             const currentRoles = user.currentRole.map(roleObj => Object.keys(roleObj)[0]);
-            console.log(currentRoles);
-            
-            // console.log("check 1");
             
             if (currentRoles.includes(role)) {
                 const error = new Error('Role already assigned to this email');
@@ -53,20 +45,13 @@ const MultiuserRegister = async (req, res) => {
             throw error;
         }
 
-        // Hash the password
         const hashedpw = await bcrypt.hash(password, 12);
-
-        // Create or update the user
         const newUser = await MultiUser.create({
             userName: username,
             password: hashedpw,
             Email: email,
             currentRole: [{ [role]: true }]
         });
-        // console.log("check 3", newUser.Email);
-        
-
-        // Respond with success message
         return res.json({
             user: newUser,
             msg:`Successfully created user with ${role}`
@@ -160,6 +145,8 @@ const matchOtp = async(req,res)=>{
     if (user.otp !== otp || user.otpExpiry < Date.now()) {
         return res.status(422).json({ error : "Invalid OTP"})
     }
+    req.user = user
+    console.log(req.user);
     
     const updateuser = await user.update({
         otp:'',
