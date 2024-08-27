@@ -21,7 +21,10 @@ const app = express();
 app.use(express.json());
 
 
-
+app.use('/',(req,res)=>{
+    console.log('hello shehroz');
+    
+})
 app.use('/E-Thalla',MultiUseruserRoutes)
 app.use('/E-Thalla/Vendors',adminRoutes); //filter at /admin
 app.use('/E-Thalla/User',shopRoutes);
