@@ -21,13 +21,23 @@ const app = express();
 app.use(express.json());
 
 
-app.use('/',(req,res)=>{
-    console.log('hello shehroz');
+// app.use('/',(req,res)=>{
+//     console.log('hello shehroz');
     
-})
+// })
+app.use((req,res,next)=>{
+    User.findByPk(1)
+    .then((user) => {
+        req.user = user;
+        // req.user.createCart()
+        next();
+    }).catch((err) => {
+        console.log(err);
+    });
+});
 app.use('/E-Thalla',MultiUseruserRoutes)
-app.use('/E-Thalla/Vendors',adminRoutes); //filter at /admin
-app.use('/E-Thalla/User',shopRoutes);
+app.use('/Vendors',adminRoutes); //filter at /admin
+app.use('/Shop',shopRoutes);
 
 
 
@@ -44,7 +54,7 @@ app.use('/E-Thalla/User',shopRoutes);
 Location.belongsTo(User,{onDelete:'CASCADE'});
 Product.belongsTo(User,{constraints: true, onDelete:'CASCADE'}) // Adds userId(as foreign key) to Product model  //onDelete: when a user is deleted than products which offer or created by user will also deleted
 Order.belongsTo(User); // Adds userId(as foreign key) to Order model
-Cart.belongsTo(User); // Adds userId(as foreign key) to Cart model
+// Cart.belongsTo(User); // Adds userId(as foreign key) to Cart model
 //--------------------------------------------------------------------
 //hasone 1:1 
 //belongsto and has many are same but there aloocation of foreign key is different

@@ -7,7 +7,14 @@ const Cart = sequelize.define('cart',{  //1st argument is model name & 2nd field
         autoIncrement: true,
         allowNull: false,
         primaryKey: true
-    }
+    },
+    // userId: {
+    //     type:Sequelize.INTEGER,
+    //     references:{
+    //         model:'User',
+    //         key: 'user'
+    //     }
+    // }
 })
 
 module.exports = Cart;

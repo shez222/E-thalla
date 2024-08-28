@@ -3,6 +3,7 @@ const Product = require('../models/product');
 
 const postAddProducts = async (req, res, next) => {
     const { title, imageUrl, description, price } = req.body;
+    console.log("check");
     
     try {
         const result = await req.user.createProduct({
@@ -20,10 +21,10 @@ const postAddProducts = async (req, res, next) => {
 
 const getEditProducts = async (req, res, next) => {
     const editMode = req.query.edit;
-    if (!editMode) {
-        return res.redirect('/');
+    if (editMode === "false") {
+       return res.json({ message: 'Unauthorized to edit product'})
     }
-
+    
     const prodId = req.params.productId;
 
     try {
@@ -31,15 +32,9 @@ const getEditProducts = async (req, res, next) => {
         const product = products[0];
 
         if (!product) {
-            return res.redirect('/');
+            return res.json({ message: 'No Such Product'})
         }
-
-        res.render('admin/edit-product', {
-            pageTitle: 'Edit Product',
-            path: '/admin/edit-product',
-            editing: editMode,
-            product: product,
-        });
+        res.json({ message: 'Product added successfully', product: product })
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: 'Failed to retrieve product for editing' });
@@ -62,7 +57,7 @@ const postEditProducts = async (req, res, next) => {
         product.description = description;
 
         await product.save();
-        res.json({ message: 'Product updated successfully' });
+        res.json({ message: 'Product updated successfully', product:product });
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: 'Failed to update product' });
@@ -89,6 +84,8 @@ const postDeleteProduct = async (req, res, next) => {
 
 const getProducts = async (req, res, next) => {
     try {
+        // console.log("check");
+        
         const products = await req.user.getProducts();
         res.json({ products });
     } catch (err) {

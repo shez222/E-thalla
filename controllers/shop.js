@@ -1,6 +1,8 @@
+const { where } = require('sequelize');
+const Cart = require('../models/cart');
 const Product = require('../models/product');
 
-exports.getProducts = async (req, res, next) => {
+const getProducts = async (req, res, next) => {
     try {
         const products = await Product.findAll();
         res.json({ products });
@@ -10,8 +12,9 @@ exports.getProducts = async (req, res, next) => {
     }
 };
 
-exports.getProduct = async (req, res, next) => {
+const getProduct = async (req, res, next) => {
     const prodId = req.params.productId;
+    console.log("check");
     
     try {
         const product = await Product.findByPk(prodId);
@@ -25,33 +28,39 @@ exports.getProduct = async (req, res, next) => {
     }
 };
 
-exports.getIndex = async (req, res, next) => {
-    try {
-        const products = await Product.findAll();
-        res.json({ products });
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ message: 'Failed to retrieve products for the index' });
-    }
-};
 
-exports.getCart = async (req, res, next) => {
+const getCart = async (req, res, next) => {
     try {
+        // await req.user.createCart()
+        // console.log("uyhuaifdyiyh",req.user.dataValues.multiUserId);
+        
+        const cartCheck = await Cart.findOne({where: {multiuserMultiUserId: req.user.dataValues.multiUserId}})
+        if (!cartCheck) {
+          await req.user.createCart() 
+        }
+        
         const cart = await req.user.getCart();
         const products = await cart.getProducts();
-        res.json({ products });
+        if (!products) {
+            return res.json("Cart is Empty")
+        }
+        res.json({ products:products });
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: 'Failed to retrieve cart products' });
     }
 };
 
-exports.postCart = async (req, res, next) => {
+const postCart = async (req, res, next) => {
     const prodId = req.body.productId;
     let fetchCart;
     let newQuantity = 1;
 
     try {
+        const cartCheck = await Cart.findOne({where: {multiuserMultiUserId: req.user.dataValues.multiUserId}})
+        if (!cartCheck) {
+          await req.user.createCart() 
+        }
         const cart = await req.user.getCart();
         fetchCart = cart;
         const products = await cart.getProducts({ where: { id: prodId } });
@@ -76,7 +85,7 @@ exports.postCart = async (req, res, next) => {
     }
 };
 
-exports.postDeleteCartProduct = async (req, res, next) => {
+const postDeleteCartProduct = async (req, res, next) => {
     const prodId = req.body.productId;
 
     try {
@@ -88,19 +97,32 @@ exports.postDeleteCartProduct = async (req, res, next) => {
         }
 
         const product = products[0];
-        await product.cartItem.destroy();
-        res.json({ message: 'Product removed from cart' });
+
+        if (product.cartItem.quantity > 1) {
+            // Decrement the quantity by 1
+            product.cartItem.quantity -= 1;
+            await product.cartItem.save();
+            res.json({ message: 'Product quantity decreased by 1' });
+        } else {
+            // Quantity is 1, so remove the product from the cart
+            await product.cartItem.destroy();
+            res.json({ message: 'Product removed from cart' });
+        }
     } catch (err) {
         console.log(err);
-        res.status(500).json({ message: 'Failed to remove product from cart' });
+        res.status(500).json({ message: 'Failed to update cart' });
     }
 };
 
-exports.postOrder = async (req, res, next) => {
+const postOrder = async (req, res, next) => {
     try {
         const cart = await req.user.getCart();
         const products = await cart.getProducts();
-
+        console.log(products.length);
+        
+        if (products.length < 1) {
+           return res.json({message:"Cart is Empty Add something to cart"})
+        }
         const order = await req.user.createOrder();
         await order.addProducts(
             products.map(product => {
@@ -117,7 +139,7 @@ exports.postOrder = async (req, res, next) => {
     }
 };
 
-exports.getOrders = async (req, res, next) => {
+const getOrders = async (req, res, next) => {
     try {
         const orders = await req.user.getOrders({ include: ['products'] });
         res.json({ orders });
@@ -126,3 +148,5 @@ exports.getOrders = async (req, res, next) => {
         res.status(500).json({ message: 'Failed to retrieve orders' });
     }
 };
+
+module.exports = { getProducts, getProduct, getCart, postCart, postDeleteCartProduct, postOrder, getOrders }

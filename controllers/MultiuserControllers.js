@@ -36,7 +36,7 @@ const MultiuserRegister = async (req, res) => {
             })
             
         }
-        console.log('check2');
+        // console.log('check2');
         
                 
         if (password !== confirmpassword) {
@@ -110,12 +110,12 @@ const MultiuserLogin = async (req, res, next) => {
             otpExpiry: Date.now() + 10 * 60 * 1000,
             token: token
         })
-        console.log(updateUser);
-        
-       return res.json({ 
-        token:token, 
-        userId: updateUser,
-        msg:'successfully login' 
+        // console.log(updateUser);
+        // await req.user.createCart()
+        return res.json({ 
+            token:token, 
+            userId: updateUser,
+            msg:'successfully login' 
         });
 
     } catch (error) {
@@ -133,9 +133,9 @@ const matchOtp = async(req,res)=>{
             Email:email
         }
     })
-    console.log(user);
+    // console.log(user);
     
-    console.log(user.otp,user.otpExpiry);
+    // console.log(user.otp,user.otpExpiry);
     
 
     if (!user || !user.otp || !user.otpExpiry) {
