@@ -10,7 +10,7 @@ const postAddProducts = async (req, res, next) => {
     if (!req.file) {
         return res.status(422).json({msg:"Error Uploading image"})
     }
-    console.log("check");
+    // console.log("check");
     
     try {
         const result = await req.user.createProduct({

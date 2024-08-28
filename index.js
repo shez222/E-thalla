@@ -9,6 +9,8 @@ const adminRoutes = require('./routes/admin'); //line no 7 or 8 ko agay peecha k
 const shopRoutes = require('./routes/shop');
 
 
+
+
 const Product = require('./models/product');
 // const ServiceProviderDetail = require('./models/ServiseProviderDetails');
 // const vendorDetails = require('./models/VendorDetails')
@@ -18,6 +20,8 @@ const Cart = require('./models/cart');
 const CartItem = require('./models/cart-item');
 const Order = require('./models/order');
 const OrderItem = require('./models/order-item');
+const { where } = require('sequelize');
+const { sendEmail } = require('./utils/sendmail');
 
 const app = express();
 const fileStorage = multer.diskStorage({
@@ -63,6 +67,7 @@ app.use('/E-Thalla',MultiUseruserRoutes)
 app.use('/Vendors',adminRoutes); //filter at /admin
 app.use('/Shop',shopRoutes);
 
+// Forgot Password Route for Mobile App
 
 
 

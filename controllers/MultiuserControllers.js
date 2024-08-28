@@ -3,10 +3,11 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto')
 const  { sendEmail } = require('../utils/sendmail')
+const {forgotdata, otpdata} = require('../utils/otp&forgotmsg')
 
 
 const MultiUser = require('../models/User');
-const { error } = require('console');
+// const { error } = require('console');
 
 
 const MultiuserRegister = async (req, res) => {
@@ -94,7 +95,11 @@ const MultiuserLogin = async (req, res, next) => {
 
         const otp = crypto.randomInt(100000,999999);
 
-        await sendEmail(email,otp)
+        const otpData = otpdata(otp);
+        // console.log(otpData);
+        
+
+        await sendEmail(email,otpData.html,otpData.subject)
         const token = jwt.sign(
             {
                 email: user.Email,
@@ -161,5 +166,114 @@ const matchOtp = async(req,res)=>{
     });
 
 }
-module.exports = {MultiuserRegister, MultiuserLogin, matchOtp}
+
+const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        // Find the user by email
+        const user = await MultiUser.findOne({
+            where: { email: email }
+        });
+
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+
+        // Generate a reset code (e.g., 6-digit code)
+        const resetCode = crypto.randomInt(100000, 999999).toString();
+        const hashedCode = await bcrypt.hash(resetCode, 12);
+        const resetCodeExpiry = Date.now() + 900000; // 15 minutes
+
+        // Save the hashed code and expiry to the user's record
+ 
+        const forgotData = forgotdata(resetCode);
+        await sendEmail(email, forgotData.html, forgotData.subject);
+        
+        const updateUser = await user.update({
+            resetPasswordToken: hashedCode,
+            resetPasswordExpires: resetCodeExpiry,
+        })   
+        console.log(updateUser);
+        
+        res.json({
+            message: 'Reset code sent successfully',
+            // resetCode, // For testing purposes, remove this in production
+            email: email
+        });
+    } catch (error) {
+        // console.log(error);
+        
+        res.status(500).json({
+            message: 'An error occurred',
+            error: error.message
+        });
+    }
+}
+
+const verifyForgetCode = async (req, res) => {
+    const { email, resetCode } = req.body;
+
+    try {
+        // Find the user
+        
+        const user = await MultiUser.findOne({
+            where: { email: email }
+        });
+        // console.log(user);
+        
+        if (!user || !user.resetPasswordToken) {
+            return res.status(400).send('Invalid or expired password reset code');
+        }
+
+        // Check if the reset code is valid and not expired
+        const isCodeValid = await bcrypt.compare(resetCode, user.resetPasswordToken);
+        if (!isCodeValid || user.resetPasswordExpires < Date.now()) {
+            return res.status(400).send('Invalid or expired password reset code');
+        }
+
+        // If valid, return a success message
+        res.status(200).json({
+            message: 'Reset code verified successfully',
+            resetCodeValid: true
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: 'An error occurred',
+            error: error.message
+        });
+    }
+}
+
+const setNewPassword = async (req, res) => {
+    const { email, newPassword } = req.body;
+
+    try {
+        // Find the user
+        const user = await MultiUser.findOne({
+            where: { email: email }
+        });
+
+        if (!user || !user.resetPasswordToken) {
+            return res.status(400).send('Invalid request. Reset password process not initiated or token expired.');
+        }
+
+        // Update the user's password
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+        user.password = hashedPassword;
+
+        // Clear the reset token fields
+        user.resetPasswordToken = null;
+        user.resetPasswordExpires = null;
+        await user.save();
+
+        res.status(200).send({message:'Password has been reset successfully'});
+    } catch (error) {
+        res.status(500).json({
+            message: 'An error occurred',
+            error: error.message
+        });
+    }
+}
+module.exports = {MultiuserRegister, MultiuserLogin, matchOtp, forgotPassword, verifyForgetCode, setNewPassword}
 

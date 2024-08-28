@@ -60,6 +60,14 @@ const MultiUser = sequelizeDbConnect.define('multiuser',{
         type:Sequelize.STRING,
         allowNull:true
     },
+    resetPasswordToken :{
+        type:Sequelize.STRING,
+        allowNull:true
+    },
+    resetPasswordExpires:{
+        type:Sequelize.STRING,
+        allowNull:true
+    },
     token: {
         type:Sequelize.STRING,
         allowNull:true
