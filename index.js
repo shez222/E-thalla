@@ -1,6 +1,9 @@
 const express = require('express');
+const path = require('path');
 const sequelize = require('./utils/db')
 const MultiUseruserRoutes = require('./routes/multiUserROutes');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid')
 // const MultiUser = require('./models/User');
 const adminRoutes = require('./routes/admin'); //line no 7 or 8 ko agay peecha karna sa tab farq nahin para ga jab ham na middlware kasath method likha hua hoga agr method kijaga .use hua to 7 or 8 ki position change karna sa farq parenga
 const shopRoutes = require('./routes/shop');
@@ -17,8 +20,27 @@ const Order = require('./models/order');
 const OrderItem = require('./models/order-item');
 
 const app = express();
+const fileStorage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, 'images');
+    },
+    filename: function(req, file, cb) {
+        const uniqueFilename = `${uuidv4()}.${file.originalname.split('.').pop()}`;
+        cb(null, uniqueFilename);
+    }
+});
+const fileFilter = (req,file,cb)=>{
+    if (file.mimetype === 'image/png' || file.mimetype === 'image/jpg' || file.mimetype === 'image/jpeg') {
+        cb(null,true)
+    } else {
+        cb(null,false)
+    }
+}
 
 app.use(express.json());
+
+app.use(multer({storage:fileStorage, fileFilter: fileFilter}).single('image'))
+app.use('/images',express.static(path.join(__dirname,'images')))
 
 
 // app.use('/',(req,res)=>{
@@ -27,16 +49,16 @@ app.use(express.json());
 // })
 
 // uncomment below when testing on postman
-// app.use((req,res,next)=>{
-//     User.findByPk(1)
-//     .then((user) => {
-//         req.user = user;
-//         // req.user.createCart()
-//         next();
-//     }).catch((err) => {
-//         console.log(err);
-//     });
-// });
+app.use((req,res,next)=>{
+    User.findByPk(1)
+    .then((user) => {
+        req.user = user;
+        // req.user.createCart()
+        next();
+    }).catch((err) => {
+        console.log(err);
+    });
+});
 app.use('/E-Thalla',MultiUseruserRoutes)
 app.use('/Vendors',adminRoutes); //filter at /admin
 app.use('/Shop',shopRoutes);

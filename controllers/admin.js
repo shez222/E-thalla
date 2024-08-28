@@ -1,8 +1,15 @@
 const Product = require('../models/product');
+// const path = require('path');
 
+const fs = require('fs');
+const path = require('path');
 
 const postAddProducts = async (req, res, next) => {
-    const { title, imageUrl, description, price } = req.body;
+    const { title, description, price } = req.body;
+    const imageUrl = req.file.path.replace("\\" ,"/");
+    if (!req.file) {
+        return res.status(422).json({msg:"Error Uploading image"})
+    }
     console.log("check");
     
     try {
@@ -41,8 +48,9 @@ const getEditProducts = async (req, res, next) => {
     }
 };
 
+
 const postEditProducts = async (req, res, next) => {
-    const { productId, title, price, imageUrl, description } = req.body;
+    const { productId, title, price, description } = req.body;
 
     try {
         const product = await Product.findByPk(productId);
@@ -51,18 +59,39 @@ const postEditProducts = async (req, res, next) => {
             return res.status(404).json({ message: 'Product not found' });
         }
 
+        if (!req.file) {
+            return res.status(422).json({ msg: "Error uploading image" });
+        }
+
+        // Get the old image path
+        const oldImagePath = path.join(__dirname, '..', product.imageUrl);
+
+        // Replace backslashes with forward slashes for the new image path
+        const newImageUrl = req.file.path.replace(/\\/g, '/');
+
+        // Delete the old image file
+        fs.unlink(oldImagePath, (err) => {
+            if (err) {
+                console.log("Failed to delete the old image: ", err);
+            } else {
+                console.log("Old image deleted successfully");
+            }
+        });
+
+        // Update the product details
         product.title = title;
         product.price = price;
-        product.imageUrl = imageUrl;
+        product.imageUrl = newImageUrl;
         product.description = description;
 
         await product.save();
-        res.json({ message: 'Product updated successfully', product:product });
+        res.json({ message: 'Product updated successfully', product: product });
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: 'Failed to update product' });
     }
 };
+
 
 const postDeleteProduct = async (req, res, next) => {
     const prodId = req.body.productId;
