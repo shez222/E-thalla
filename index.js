@@ -25,16 +25,18 @@ app.use(express.json());
 //     console.log('hello shehroz');
     
 // })
-app.use((req,res,next)=>{
-    User.findByPk(1)
-    .then((user) => {
-        req.user = user;
-        // req.user.createCart()
-        next();
-    }).catch((err) => {
-        console.log(err);
-    });
-});
+
+// uncomment below when testing on postman
+// app.use((req,res,next)=>{
+//     User.findByPk(1)
+//     .then((user) => {
+//         req.user = user;
+//         // req.user.createCart()
+//         next();
+//     }).catch((err) => {
+//         console.log(err);
+//     });
+// });
 app.use('/E-Thalla',MultiUseruserRoutes)
 app.use('/Vendors',adminRoutes); //filter at /admin
 app.use('/Shop',shopRoutes);
