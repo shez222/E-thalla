@@ -11,39 +11,20 @@ const MultiUser = require('../models/User');
 
 
 const MultiuserRegister = async (req, res) => {
-    const { email, username, password, confirmpassword, role } = req.body;
+    const { email, username, password, confirmpassword } = req.body;
     
     try {
         const user = await MultiUser.findOne({ where: { Email: email } });
         if (user) {
-            const isEqual = await bcrypt.compare(password,user.password);
+            const isEqual = await bcrypt.compare(password, user.password);
             if (!isEqual) {
-                return res.json({ error: "Email already exist"})
+                return res.json({ error: "Email already exists" });
             }
-            const currentRoles = user.currentRole.map(roleObj => Object.keys(roleObj)[0]);
-            
-            if (currentRoles.includes(role)) {
-                const error = new Error('Role already assigned to this email');
-                error.status = 422;
-                throw error;
-            }
-
-            const updateUser = await user.update({
-                currentRole: user ? [...user.currentRole, { [role]: true }] : [{ [role]: true }]
-            })
-            return res.json({
-                updateUser:updateUser,
-                msg:`upgraded to role and role added ${role}`
-            })
-            
+            return res.json({ error: "User already registered. Please login." });
         }
-        // console.log('check2');
-        
-                
+
         if (password !== confirmpassword) {
-            const error = new Error('Password Not Matched');
-            error.status = 422;
-            throw error;
+            res.status(422).json("password not matched")
         }
 
         const hashedpw = await bcrypt.hash(password, 12);
@@ -51,15 +32,14 @@ const MultiuserRegister = async (req, res) => {
             userName: username,
             password: hashedpw,
             Email: email,
-            currentRole: [{ [role]: true }]
+            currentRole: [{ 'role': 'user' }] // Default role assigned as 'user'
         });
         return res.json({
             user: newUser,
-            msg:`Successfully created user with ${role}`
+            msg: `Successfully created user with default role 'user'`
         });
 
     } catch (error) {
-        // Handle errors
         if (!error.status) {
             error.status = 500;
         }
@@ -68,38 +48,34 @@ const MultiuserRegister = async (req, res) => {
 };
 
 
+
 const MultiuserLogin = async (req, res, next) => {
-    const { email, password, role } = req.body;
+    const { email, password } = req.body;
 
     try {
         const user = await MultiUser.findOne({
-            where: {
-                Email: email
-            }
+            where: { Email: email }
         });
-        
+
         if (!user) {
             return res.status(422).json({ error: 'Not Registered' });
         }
-
-        const currentRoles = user.currentRole.map(roleObj => Object.keys(roleObj)[0]);
-        if (!currentRoles.includes(role)) {
-            return res.status(422).json({error: 'not registered to this role'})
-        }
-
 
         const isEqual = await bcrypt.compare(password, user.password);
         if (!isEqual) {
             return res.status(422).json({ error: 'Wrong Password' });
         }
 
-        const otp = crypto.randomInt(100000,999999);
+        // Check if the user has a role, assign 'user' if no role found
+        if (!user.currentRole || user.currentRole.length === 0) {
+            user.currentRole = [{ 'user': true }];
+            await user.save();
+        }
 
+        const otp = crypto.randomInt(100000, 999999);
         const otpData = otpdata(otp);
-        // console.log(otpData);
-        
+        await sendEmail(email, otpData.html, otpData.subject);
 
-        await sendEmail(email,otpData.html,otpData.subject)
         const token = jwt.sign(
             {
                 email: user.Email,
@@ -110,17 +86,17 @@ const MultiuserLogin = async (req, res, next) => {
                 expiresIn: '1h'
             }
         );
-        const updateUser = await user.update({
+        
+        await user.update({
             otp: otp,
             otpExpiry: Date.now() + 10 * 60 * 1000,
             token: token
-        })
-        // console.log(updateUser);
-        // await req.user.createCart()
+        });
+
         return res.json({ 
-            token:token, 
-            userId: updateUser,
-            msg:'successfully login' 
+            token: token, 
+            userId: user.multiUserId,
+            // msg: 'Successfully logged in'
         });
 
     } catch (error) {
@@ -128,6 +104,7 @@ const MultiuserLogin = async (req, res, next) => {
         res.status(error.status || 500).json({ error: error.message });
     }
 };
+
 
 const matchOtp = async(req,res)=>{
 
@@ -138,10 +115,6 @@ const matchOtp = async(req,res)=>{
             Email:email
         }
     })
-    // console.log(user);
-    
-    // console.log(user.otp,user.otpExpiry);
-    
 
     if (!user || !user.otp || !user.otpExpiry) {
         return res.status(422).json({ error : 'user not allowed'})
