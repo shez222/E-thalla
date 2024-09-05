@@ -16,10 +16,6 @@ const MultiuserRegister = async (req, res) => {
     try {
         const user = await MultiUser.findOne({ where: { Email: email } });
         if (user) {
-            const isEqual = await bcrypt.compare(password, user.password);
-            if (!isEqual) {
-                return res.json({ error: "Email already exists" });
-            }
             return res.json({ error: "User already registered. Please login." });
         }
 
