@@ -171,7 +171,6 @@ const forgotPassword = async (req, res) => {
         
         res.json({
             message: 'Reset code sent successfully',
-            // resetCode, // For testing purposes, remove this in production
             email: email
         });
     } catch (error) {
