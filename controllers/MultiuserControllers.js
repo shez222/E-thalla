@@ -4,8 +4,6 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto')
 const  { sendEmail } = require('../utils/sendmail')
 const {forgotdata, otpdata} = require('../utils/otp&forgotmsg')
-
-
 const MultiUser = require('../models/User');
 // const { error } = require('console');
 
@@ -62,12 +60,6 @@ const MultiuserLogin = async (req, res, next) => {
             return res.status(422).json({ error: 'Wrong Password' });
         }
 
-        // Check if the user has a role, assign 'user' if no role found
-        if (!user.currentRole || user.currentRole.length === 0) {
-            user.currentRole = [{ 'user': true }];
-            await user.save();
-        }
-
         const otp = crypto.randomInt(100000, 999999);
         const otpData = otpdata(otp);
         await sendEmail(email, otpData.html, otpData.subject);
@@ -92,7 +84,7 @@ const MultiuserLogin = async (req, res, next) => {
         return res.json({ 
             token: token, 
             userId: user.multiUserId,
-            // msg: 'Successfully logged in'
+            msg:"OTP Send Succssfully"
         });
 
     } catch (error) {
