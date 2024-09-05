@@ -60,7 +60,8 @@ const MultiuserLogin = async (req, res, next) => {
             return res.status(422).json({ error: 'Wrong Password' });
         }
 
-        const otp = crypto.randomInt(100000, 999999);
+        const otp = crypto.randomInt(100000, 999999).toString();
+        const hashedOtp = await bcrypt.hash(otp, 12);
         const otpData = otpdata(otp);
         await sendEmail(email, otpData.html, otpData.subject);
 
@@ -76,15 +77,15 @@ const MultiuserLogin = async (req, res, next) => {
         );
         
         await user.update({
-            otp: otp,
-            otpExpiry: Date.now() + 10 * 60 * 1000,
+            otp: hashedOtp,
+            otpExpiry: Date.now() + 900000,//15min
             token: token
         });
 
         return res.json({ 
             token: token, 
             userId: user.multiUserId,
-            msg:"OTP Send Succssfully"
+            msg:"OTP Send Successfully"
         });
 
     } catch (error) {
@@ -107,12 +108,12 @@ const matchOtp = async(req,res)=>{
     if (!user || !user.otp || !user.otpExpiry) {
         return res.status(422).json({ error : 'user not allowed'})
     }
-
-    if (user.otp !== otp || user.otpExpiry < Date.now()) {
-        return res.status(422).json({ error : "Invalid OTP"})
+    const isCodeValid = await bcrypt.compare(otp, user.otp);
+    if (!isCodeValid || user.otpExpiry < Date.now()) {
+        return res.status(400).send('Invalid or expired password reset code');
     }
-    req.user = user
-    console.log(req.user);
+    // req.user = user
+    // console.log(req.user);
     
     const updateuser = await user.update({
         otp:'',
@@ -138,13 +139,12 @@ const forgotPassword = async (req, res) => {
         });
 
         if (!user) {
-            return res.status(404).send('User not found');
+            return res.status(404).send({msg : 'User not found'});
         }
 
         // Generate a reset code (e.g., 6-digit code)
         const resetCode = crypto.randomInt(100000, 999999).toString();
         const hashedCode = await bcrypt.hash(resetCode, 12);
-        const resetCodeExpiry = Date.now() + 900000; // 15 minutes
 
         // Save the hashed code and expiry to the user's record
  
@@ -153,7 +153,7 @@ const forgotPassword = async (req, res) => {
         
         const updateUser = await user.update({
             resetPasswordToken: hashedCode,
-            resetPasswordExpires: resetCodeExpiry,
+            resetPasswordExpires: Date.now() + 900000 // 15 minutes,
         })   
         console.log(updateUser);
         
@@ -215,7 +215,7 @@ const setNewPassword = async (req, res) => {
         });
 
         if (!user || !user.resetPasswordToken) {
-            return res.status(400).send('Invalid request. Reset password process not initiated or token expired.');
+            return res.status(400).send({msg:'Invalid request. Reset password process not initiated or token expired.'});
         }
 
         // Update the user's password
