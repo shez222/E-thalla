@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../utils/db');
 
-const Product = sequelize.define('product',{  //1st argument is model name & 2nd fields
+const Product = sequelize.define('Products',{  //1st argument is model name & 2nd fields
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,

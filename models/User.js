@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelizeDbConnect =require('../utils/db');
 
-const MultiUser = sequelizeDbConnect.define('multiuser',{
+const MultiUser = sequelizeDbConnect.define('Users',{
     multiUserId : {
         type:Sequelize.INTEGER,
         allowNull:true,

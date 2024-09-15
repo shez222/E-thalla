@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelizeDbConnect = require('../utils/db');
 
-const Location = sequelizeDbConnect.define('location', {
+const Location = sequelizeDbConnect.define('Locations', {
     locationId: {
         type: Sequelize.INTEGER,
         allowNull: false,
