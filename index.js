@@ -52,13 +52,12 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-app.use(express.json());
 app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).single('image'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // Middleware to attach user to request
 app.use((req, res, next) => {
-    User.findByPk(1)
+    User.findByPk(2)
         .then(user => {
             req.user = user;
             // console.log(req.user);
