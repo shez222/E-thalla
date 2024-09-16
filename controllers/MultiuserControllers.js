@@ -7,58 +7,6 @@ const {forgotdata, otpdata} = require('../utils/otp&forgotmsg')
 const MultiUser = require('../models/User');
 
 
-// const MultiuserRegister = async (req, res) => {
-//     const { email, username, password, confirmpassword, role } = req.body;
-    
-//     try {
-          
-//         const user = await MultiUser.findOne({ where: { Email: email } });
-//         if (user) {
-//             const isEqual = await bcrypt.compare(password,user.password);
-//             if (!isEqual) {
-//                 return res.json({ error: "Email already exist"})
-//             }
-//             const currentRoles = user.currentRole.map(roleObj => Object.keys(roleObj)[0]);
-//             if (currentRoles.includes(role)) {
-//                 const error = new Error('Role already assigned to this email');
-//                 error.status = 422;
-//                 throw error;
-//             }
-//             const updateUser = await user.update({
-//                 currentRole: user ? [...user.currentRole, { [role]: true }] : [{ [role]: true }]
-//             })
-//             return res.json({
-//                 updateUser:updateUser,
-//                 msg:`upgraded to role and role added ${role}`
-//             })
-//         }
-
-//         if (password !== confirmpassword) {
-//             const error = new Error('Password Not Matched');
-//             error.status = 422;
-//             throw error;
-//         }
-//         const hashedpw = await bcrypt.hash(password, 12);
-
-//         const newUser = await MultiUser.create({
-//             userName: username,
-//             password: hashedpw,
-//             Email: email,
-//             currentRole: [{ 'role': 'user' },{'role': [role]}]
-//         });
-//         return res.json({
-//             user: newUser,
-//             msg:`Successfully created user with ${role}`
-//         });
-
-//     } catch (error) {
-//         if (!error.status) {
-//             error.status = 500;
-//         }
-//         res.status(error.status).json({ error: error.message });
-//     }
-// };
-
 const MultiuserRegister = async (req, res) => {
     const { email, username, password, confirmpassword,role} = req.body;
     
